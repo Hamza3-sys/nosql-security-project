@@ -1,382 +1,301 @@
-\# TP5 - Static Application Security Testing (SAST) avec SonarQube
+# 🔍 TP5 - Static Application Security Testing (SAST) avec SonarQube
 
+## 📌 Présentation
 
+Dans ce TP, nous avons mis en œuvre une analyse SAST (Static Application Security Testing) afin d'identifier les vulnérabilités potentielles dans une application Node.js développée lors des précédents travaux pratiques.
 
-\## 📌 Objectifs du TP
+L'objectif principal était d'utiliser SonarQube pour analyser un code vulnérable, interpréter les résultats obtenus, corriger les problèmes détectés puis valider les corrections par une nouvelle analyse.
 
+---
 
+## 🎯 Objectifs
 
-\- Comprendre ce qu'est le SAST (Static Application Security Testing)
+* Comprendre le fonctionnement du SAST
+* Installer SonarQube avec Docker
+* Configurer SonarScanner
+* Analyser une API Node.js vulnérable
+* Identifier les Security Hotspots
+* Corriger les problèmes détectés
+* Réaliser une seconde analyse de validation
 
-\- Installer et configurer SonarQube avec Docker
+---
 
-\- Analyser un code Node.js vulnérable (API SOC)
+## 🛠️ Technologies utilisées
 
-\- Identifier les Security Hotspots et vulnérabilités
+| Technologie  | Version | Rôle                     |
+| ------------ | ------- | ------------------------ |
+| SonarQube    | 9.9 LTS | Analyse statique du code |
+| Docker       | 29.3.1  | Conteneurisation         |
+| SonarScanner | 8.0.1   | Analyse du code source   |
+| Node.js      | 20.11.0 | Runtime JavaScript       |
+| Express.js   | 4.18.0  | Framework Web            |
+| MongoDB      | 7       | Base de données NoSQL    |
 
-\- Corriger les problèmes détectés
+---
 
-\- Valider les corrections par une nouvelle analyse
+## 🏗️ Architecture du TP
 
+```text
+┌───────────────────────────────────────────┐
+│             Machine Locale                │
+├───────────────────────────────────────────┤
+│                                           │
+│  Docker                                   │
+│  ┌─────────────────────────────────────┐  │
+│  │ SonarQube (Port 9000)               │  │
+│  └─────────────────────────────────────┘  │
+│                                           │
+│  Code Source                             │
+│  ┌─────────────────────────────────────┐  │
+│  │ server.js (vulnérable)              │  │
+│  │ server-safe.js (corrigé)            │  │
+│  └─────────────────────────────────────┘  │
+│                                           │
+│  MongoDB (soc_lite)                      │
+│  ├── users                              │
+│  ├── security_logs                      │
+│  └── incidents                          │
+│                                           │
+└───────────────────────────────────────────┘
+```
 
+---
 
-\---
+## 🚀 Déploiement de SonarQube
 
+### Lancement du conteneur
 
+```bash
+docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
+```
 
-\## 🛠 Technologies utilisées
+### Accès à l'interface
 
+```text
+URL : http://localhost:9000
+Login : admin
+Password : admin
+```
 
+Le mot de passe doit être modifié lors de la première connexion.
 
-| Technologie | Version | Rôle |
+---
 
-|-------------|---------|------|
+## 📂 Création du projet SonarQube
 
-| SonarQube | 9.9 LTS | Analyse statique de code |
+| Paramètre    | Valeur               |
+| ------------ | -------------------- |
+| Project Key  | soc-api-vulnerable   |
+| Display Name | SOC API - Vulnerable |
 
-| Docker | 29.3.1 | Conteneurisation de SonarQube |
+Après la création du projet, un token d'analyse a été généré afin d'autoriser SonarScanner à envoyer les résultats vers SonarQube.
 
-| SonarScanner | 8.0.1 | Scanner CLI pour l'analyse |
+---
 
-| Node.js | 20.11.0 | Runtime de l'API analysée |
+## 🔎 Première Analyse (Code Vulnérable)
 
-| Express.js | 4.18.0 | Framework web |
+### Fichier analysé
 
+```text
+server.js
+```
 
+### Résultats
 
-\---
+| Métrique          | Valeur | Statut |
+| ----------------- | ------ | ------ |
+| Bugs              | 0      | ✅      |
+| Vulnerabilities   | 0      | ⚠️     |
+| Security Hotspots | 2      | ⚠️     |
+| Code Smells       | 1      | ⚠️     |
+| Quality Gate      | PASSED | ✅      |
 
+---
 
+## ⚠️ Security Hotspots Détectés
 
-\## 🏗 Architecture du TP
+| Règle            | Description                                   | Sévérité |
+| ---------------- | --------------------------------------------- | -------- |
+| javascript:S5689 | Disclosure de fingerprinting via X-Powered-By | Medium   |
+| javascript:S5689 | Disclosure de fingerprinting via X-Powered-By | Medium   |
 
-┌─────────────────────────────────────────────────────────────────┐
+### Explication
 
-│ Machine locale │
+Par défaut, Express ajoute l'en-tête HTTP suivant :
 
-├─────────────────────────────────────────────────────────────────┤
+```http
+X-Powered-By: Express
+```
 
-│ │
+Cet en-tête révèle la technologie utilisée par l'application et facilite le travail d'un attaquant lors de la phase de reconnaissance.
 
-│ ┌──────────────┐ ┌──────────────────────────────┐ │
+---
 
-│ │ Docker │ │ Code Source (Node.js) │ │
+## 🔧 Correction Apportée
 
-│ │ │ │ │ │
-
-│ │ ┌────────┐ │ │ ┌────────────────────────┐ │ │
-
-│ │ │SonarQube│◄─┼─────────┼──│ server.js (vulnérable) │ │ │
-
-│ │ │ :9000 │ │ Analyse │ │ server-safe.js (corrigé)│ │ │
-
-│ │ └────────┘ │ │ └────────────────────────┘ │ │
-
-│ │ │ │ │ │
-
-│ └──────────────┘ │ ┌────────────────────────┐ │ │
-
-│ │ │ MongoDB (soc\_lite) │ │ │
-
-│ │ │ - users │ │ │
-
-│ │ │ - security\_logs │ │ │
-
-│ │ │ - incidents │ │ │
-
-│ │ └────────────────────────┘ │ │
-
-│ └──────────────────────────────┘ │
-
-└─────────────────────────────────────────────────────────────────┘
-
-
-
-text
-
-
-
-\---
-
-
-
-\## 📊 Résultats de l'analyse
-
-
-
-\### Première analyse (server.js - vulnérable)
-
-
-
-| Métrique | Valeur | Statut |
-
-|----------|--------|--------|
-
-| \*\*Bugs\*\* | 0 | ✅ |
-
-| \*\*Vulnerabilities\*\* | 0 | ⚠️ |
-
-| \*\*Security Hotspots\*\* | 2 | ⚠️ À corriger |
-
-| \*\*Code Smells\*\* | 1 | ⚠️ |
-
-| \*\*Quality Gate\*\* | PASSED | ✅ |
-
-
-
-\### Security Hotspots détectés
-
-
-
-| # | Type | Fichier | Description | Sévérité |
-
-|---|------|---------|-------------|----------|
-
-| 1 | `javascript:S5689` | server.js | Disclosing fingerprinting (X-Powered-By) | Medium |
-
-| 2 | `javascript:S5689` | server.js | Disclosing fingerprinting (X-Powered-By) | Medium |
-
-
-
-\---
-
-
-
-\### Deuxième analyse (server-safe.js - corrigé)
-
-
-
-| Métrique | Valeur | Statut |
-
-|----------|--------|--------|
-
-| \*\*Bugs\*\* | 0 | ✅ |
-
-| \*\*Vulnerabilities\*\* | 1 | ⚠️ (hardcoded credentials) |
-
-| \*\*Security Hotspots\*\* | 0 | ✅ CORRIGÉ |
-
-| \*\*Code Smells\*\* | 1 | ⚠️ |
-
-| \*\*Quality Gate\*\* | PASSED | ✅ |
-
-
-
-\---
-
-
-
-\## 🔧 Corrections apportées
-
-
-
-\### Correction 1 : Désactivation de l'en-tête X-Powered-By
-
-
-
-\*\*Fichier :\*\* `server-safe.js`
-
-
-
-\*\*Code avant (vulnérable) :\*\*
+### Avant
 
 ```javascript
+const app = express();
+```
 
+### Après
+
+```javascript
 const app = express();
 
-Code après (corrigé) :
+app.disable('x-powered-by');
+```
 
+### Bénéfice
 
+La suppression de cet en-tête réduit les informations divulguées aux attaquants et limite les possibilités de fingerprinting.
 
-javascript
+---
 
-const app = express();
+## 🔎 Deuxième Analyse (Code Corrigé)
 
-app.disable('x-powered-by');   // ← Désactive l'en-tête HTTP
+### Fichier analysé
 
-Pourquoi ? L'en-tête X-Powered-By: Express révèle la technologie utilisée, facilitant le ciblage par les attaquants.
+```text
+server-safe.js
+```
 
+### Résultats
 
+| Métrique          | Valeur | Statut |
+| ----------------- | ------ | ------ |
+| Bugs              | 0      | ✅      |
+| Vulnerabilities   | 1      | ⚠️     |
+| Security Hotspots | 0      | ✅      |
+| Code Smells       | 1      | ⚠️     |
+| Quality Gate      | PASSED | ✅      |
 
-Vulnérabilité persistante (non corrigée dans ce TP)
+---
 
-Problème	Ligne	Risque	Solution
+## 🚨 Vulnérabilité Persistante
 
-Hardcoded credentials	12	Identifiants MongoDB en clair dans le code	Utiliser des variables d'environnement (.env)
+### Hardcoded Credentials
 
-javascript
+SonarQube a signalé la présence d'identifiants directement intégrés dans le code.
 
-// 🔴 Actuel (dangereux)
+### Exemple vulnérable
 
-const URI = 'mongodb://adminSoc:Passw0rd\_S3cure!@localhost:27018/soc\_lite?authSource=admin';
+```javascript
+const URI =
+'mongodb://adminSoc:Passw0rd_S3cure!@localhost:27018/soc_lite?authSource=admin';
+```
 
+### Bonne pratique recommandée
 
-
-// ✅ Recommandé (sécurisé)
-
+```javascript
 require('dotenv').config();
 
-const URI = `mongodb://${process.env.DB\_USER}:${process.env.DB\_PASSWORD}@${process.env.DB\_HOST}/${process.env.DB\_NAME}?authSource=${process.env.DB\_AUTH\_SOURCE}`;
+const URI =
+`mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_NAME}?authSource=${process.env.DB_AUTH_SOURCE}`;
+```
 
-📸 Captures d'écran
+### Avantages
 
-\#	Fichier	Description
+* Séparation du code et des secrets
+* Réduction du risque de fuite
+* Compatible CI/CD et DevSecOps
 
-1	capture1.png	Création du projet "soc-api-vulnerable"
+---
 
-2	capture2.png	Génération du token d'analyse
+## 📸 Captures Réalisées
 
-3	capture3.png	Première analyse (EXECUTION SUCCESS)
+| Capture      | Description                            |
+| ------------ | -------------------------------------- |
+| capture1.png | Création du projet SonarQube           |
+| capture2.png | Génération du token                    |
+| capture3.png | Première analyse réussie               |
+| capture4.png | Dashboard avec 2 Security Hotspots     |
+| capture5.png | Détail d'un Security Hotspot           |
+| capture6.png | Code corrigé                           |
+| capture7.png | Deuxième analyse réussie               |
+| capture8.png | Dashboard final sans Security Hotspots |
 
-4	capture4.png	Tableau de bord - 2 Security Hotspots
+---
 
-5	capture5.png	Détail d'un Security Hotspot (fingerprinting)
+## ⚙️ Commandes Utilisées
 
-6	capture6.png	Code corrigé avec app.disable('x-powered-by')
+### Analyse du projet
 
-7	capture7.png	Deuxième analyse (EXECUTION SUCCESS)
+```bash
+cd soc-api
 
-8	capture8.png	Tableau de bord final - 0 Security Hotspots
+docker run --rm \
+-v "${PWD}:/usr/src" \
+sonarsource/sonar-scanner-cli
+```
 
-🚀 Commandes exécutées
+Après correction :
 
-Lancer SonarQube
+```bash
+docker run --rm \
+-v "${PWD}:/usr/src" \
+sonarsource/sonar-scanner-cli
+```
 
-bash
+---
 
-docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
+## 📚 Apprentissages Réalisés
 
-Accéder à SonarQube
+| Compétence                      | Acquise |
+| ------------------------------- | ------- |
+| Comprendre le SAST              | ✅       |
+| Installer SonarQube             | ✅       |
+| Configurer SonarScanner         | ✅       |
+| Lire les métriques de sécurité  | ✅       |
+| Analyser les Security Hotspots  | ✅       |
+| Corriger les problèmes détectés | ✅       |
+| Valider les corrections         | ✅       |
+| Comprendre les limites du SAST  | ✅       |
 
-URL : http://localhost:9000
+---
 
+## ⚖️ Avantages et Limites de SonarQube
 
+### Points forts
 
-Identifiant : admin
+* ✅ Installation simple via Docker
+* ✅ Interface graphique intuitive
+* ✅ Détection des Security Hotspots
+* ✅ Intégration facile dans un pipeline CI/CD
+* ✅ Support de nombreux langages
 
+### Limites observées
 
+* ❌ Certaines vulnérabilités applicatives restent non détectées
+* ❌ Les injections NoSQL ne sont pas toujours identifiées
+* ❌ Les hardcoded credentials nécessitent parfois des règles supplémentaires
+* ❌ La version Community dispose de moins de fonctionnalités que les éditions payantes
 
-Mot de passe : admin (puis modifier)
+---
 
+## 🎓 Conclusion
 
+SonarQube constitue un excellent outil d'analyse statique et permet d'identifier rapidement plusieurs faiblesses de sécurité dans une application.
 
-Créer le projet
+Cependant, il ne remplace pas :
 
-Project key : soc-api-vulnerable
+* Une revue de code manuelle
+* Les tests d'intrusion
+* Les audits de sécurité
+* Les bonnes pratiques de développement sécurisé
 
+Une stratégie DevSecOps efficace combine plusieurs couches de contrôle afin de réduire les risques de sécurité tout au long du cycle de développement.
 
+---
 
-Display name : SOC API - Vulnerable
+## 👨‍💻 Auteur
 
-
-
-Générer le token
-
-Token : sqp\_498fcf7135bb7f0556891a7fc219bbe5f7bc08eb
-
-
-
-Analyser le code
-
-bash
-
-cd C:\\Users\\hp\\nosql-security-project\\soc-api
-
-
-
-\# Première analyse (server.js)
-
-docker run --rm -v "${PWD}:/usr/src" sonarsource/sonar-scanner-cli
-
-
-
-\# Après correction (server-safe.js)
-
-docker run --rm -v "${PWD}:/usr/src" sonarsource/sonar-scanner-cli
-
-📊 Récapitulatif des apprentissages
-
-Concept	Compris
-
-Qu'est-ce que le SAST ?	✅
-
-Installation de SonarQube	✅
-
-Création d'un projet d'analyse	✅
-
-Lecture des métriques (Bugs, Vulnérabilités, Hotspots)	✅
-
-Interprétation des Security Hotspots	✅
-
-Correction des problèmes détectés	✅
-
-Re-analyse et validation	✅
-
-Limites de SonarQube (hardcoded credentials non détectés)	✅
-
-🎓 Bilan et enseignements
-
-Points positifs de SonarQube
-
-✅ Installation simple via Docker
-
-
-
-✅ Interface claire et intuitive
-
-
-
-✅ Détection des Security Hotspots (fingerprinting)
-
-
-
-✅ Intégration facile dans un pipeline CI/CD
-
-
-
-Limites de SonarQube
-
-❌ N'a pas détecté les identifiants MongoDB en clair (hardcoded credentials)
-
-
-
-❌ N'a pas détecté les potentielles injections NoSQL
-
-
-
-❌ La version Community a moins de règles que la version Developer
-
-
-
-Conclusion
-
-SonarQube est un outil utile mais insuffisant. Il doit être complété par :
-
-
-
-Une revue de code manuelle
-
-
-
-Des tests d'intrusion
-
-
-
-Une analyse de sécurité humaine
-
-
-
-Des bonnes pratiques de développement (variables d'environnement, validation des entrées)
-
-
-
-📅 Informations
-
-Élément	Valeur
-
-Date de réalisation	02/06/2026
-
-Module	NoSQL Security - Séance 5
-
-Auteur	Hamza MRANI ALAOUI
-
+**Hamza MRANI ALAOUI**
+
+| Élément         | Valeur                    |
+| --------------- | ------------------------- |
+| Module          | NoSQL Security            |
+| TP              | TP5 - SAST avec SonarQube |
+| Date            | 02/06/2026                |
+| Outil principal | SonarQube 9.9 LTS         |
