@@ -1,148 +1,147 @@
-markdown
+# 🔐 Checklist Sécurité MongoDB — TP1
 
-\# Checklist Sécurité MongoDB — TP1
+## 📌 Informations Générales
 
+| Élément      | Valeur                        |
+| ------------ | ----------------------------- |
+| **Étudiant** | Hamza MRANI ALAOUI            |
+| **Module**   | NoSQL Security                |
+| **Séance**   | TP1 - MongoDB Security Basics |
+| **Date**     | 02/06/2026                    |
 
+---
 
-\## Informations
+## 🎯 Objectif du TP
 
-\- \*\*Date\*\* : 02/06/2026
+L'objectif de ce TP est d'identifier les faiblesses de sécurité d'une instance MongoDB déployée avec sa configuration par défaut, puis d'effectuer des opérations CRUD et une première analyse des risques liés à l'absence de mécanismes de protection.
 
-\- \*\*Module\*\* : NoSQL Security - Séance 1
+---
 
-\- \*\*Étudiant\*\* : \[VOTRE NOM]
+## 🔍 Vérification de la Configuration par Défaut
 
+| Vérification             | Commande                                | Résultat                      | Statut    |
+| ------------------------ | --------------------------------------- | ----------------------------- | --------- |
+| Port MongoDB exposé      | `docker port mongo-noseclab`            | `0.0.0.0:27017`               | ⚠️ Ouvert |
+| Authentification activée | `db.adminCommand({ listDatabases: 1 })` | Accès sans authentification   | ❌ Non     |
+| Binding réseau           | `docker port mongo-noseclab`            | Toutes interfaces (`0.0.0.0`) | ⚠️ Risqué |
+| Accès sans mot de passe  | Connexion directe au serveur            | Accès complet                 | ❌ Oui     |
 
+### Observation
 
-\---
+La configuration par défaut permet un accès total à la base de données sans authentification, ce qui constitue un risque critique dans un environnement de production.
 
+---
 
+## ⚙️ Commandes Réalisées
 
-\## 1. Vérifications de la configuration par défaut
+| Commande                                                                            | Objectif                    | Résultat              |
+| ----------------------------------------------------------------------------------- | --------------------------- | --------------------- |
+| `docker run -d --name mongo-noseclab -p 27017:27017 -v mongo-data:/data/db mongo:7` | Démarrer MongoDB            | ✅ Succès              |
+| `docker exec -it mongo-noseclab mongosh`                                            | Connexion au shell MongoDB  | ✅ Succès              |
+| `db.security_logs.insertMany([...])`                                                | Insertion des logs          | ✅ 12 documents        |
+| `db.security_logs.countDocuments()`                                                 | Vérification de l'insertion | ✅ 12 documents        |
+| `db.security_logs.find({ status: "failure" })`                                      | Recherche des échecs        | ✅ 6 résultats         |
+| `db.security_logs.updateOne(...)`                                                   | Mise à jour d'un document   | ✅ 1 document modifié  |
+| `db.security_logs.deleteOne({ user: "eve" })`                                       | Suppression d'un document   | ✅ 1 document supprimé |
 
+---
 
+## 📚 Opérations CRUD Réalisées
 
-| Vérification | Commande | Résultat | Statut |
+| Opération | MongoDB                        | SQL           |
+| --------- | ------------------------------ | ------------- |
+| Create    | `insertOne()` / `insertMany()` | `INSERT INTO` |
+| Read      | `find()` / `findOne()`         | `SELECT`      |
+| Update    | `updateOne()` / `updateMany()` | `UPDATE`      |
+| Delete    | `deleteOne()` / `deleteMany()` | `DELETE`      |
 
-|--------------|----------|----------|--------|
+---
 
-| Port 27017 ouvert | `docker port mongo-noseclab` | 0.0.0.0:27017 | ⚠️ Ouvert |
+## 🚀 Exemple de Requête Avancée
 
-| Authentification activée | `docker exec mongo-noseclab mongosh --eval "db.adminCommand({ listDatabases: 1 })"` | Accès sans mot de passe | ❌ NON |
-
-| Binding réseau | `docker port mongo-noseclab` | 0.0.0.0 | ⚠️ Toutes interfaces |
-
-| Accès sans mot de passe | Même commande | Accès total | ❌ OUI |
-
-
-
-\---
-
-
-
-\## 2. Commandes exécutées
-
-
-
-| Commande | Objectif | Résultat |
-
-|----------|----------|----------|
-
-| `docker run -d --name mongo-noseclab -p 27017:27017 -v mongo-data:/data/db mongo:7` | Lancer MongoDB | ✅ Succès |
-
-| `docker exec -it mongo-noseclab mongosh` | Connexion au shell | ✅ Succès |
-
-| `db.security\_logs.insertMany(\[...])` | Insérer 12 logs | ✅ 12 documents |
-
-| `db.security\_logs.countDocuments()` | Vérifier insertion | ✅ 12 |
-
-| `db.security\_logs.find({ status: "failure" })` | Lire échecs | ✅ 6 documents |
-
-| `db.security\_logs.updateOne({...}, {$set: {investigated: true}})` | Mettre à jour | ✅ 1 modifié |
-
-| `db.security\_logs.deleteOne({ user: "eve" })` | Supprimer | ✅ 1 supprimé |
-
-
-
-\---
-
-
-
-\## 3. Opérations CRUD réalisées
-
-
-
-| Opération | Commande MongoDB | Équivalent SQL |
-
-|-----------|-----------------|----------------|
-
-| Create | `insertOne()` / `insertMany()` | `INSERT INTO` |
-
-| Read | `find()` / `findOne()` | `SELECT` |
-
-| Update | `updateOne()` / `updateMany()` | `UPDATE` |
-
-| Delete | `deleteOne()` / `deleteMany()` | `DELETE` |
-
-
-
-\---
-
-
-
-\## 4. Requêtes avancées réalisées
-
-
+Recherche des événements de sévérité élevée ou critique avec projection, tri décroissant et limitation des résultats :
 
 ```javascript
+db.security_logs.find(
+  {
+    severity: { $in: ["high", "critical"] }
+  },
+  {
+    timestamp: 1,
+    src_ip: 1,
+    action: 1,
+    severity: 1,
+    _id: 0
+  }
+)
+.sort({ timestamp: -1 })
+.limit(3)
+```
 
-// Requête avec projection et tri
+---
 
-db.security\_logs.find(
+## ⚠️ Risques de Sécurité Identifiés
 
-&#x20; { severity: { $in: \["high", "critical"] } },
+| # | Risque                       | Impact Potentiel                       |
+| - | ---------------------------- | -------------------------------------- |
+| 1 | Vol des journaux de sécurité | Exfiltration de données sensibles      |
+| 2 | Suppression des preuves      | Effacement des traces d'attaque        |
+| 3 | Ransomware                   | Chiffrement ou suppression des données |
 
-&#x20; { timestamp: 1, src\_ip: 1, action: 1, severity: 1, \_id: 0 }
+### Analyse
 
-).sort({ timestamp: -1 }).limit(3)
+L'absence d'authentification et l'exposition du service sur toutes les interfaces permettent à un attaquant de consulter, modifier ou supprimer les données sans restriction.
 
-5\. 3 risques concrets identifiés
+---
 
-\#	Risque	Impact
+## 🛡️ Mesures Correctives Recommandées
 
-1	Vol des logs de sécurité	Un attaquant peut exporter tous les logs
+| # | Mesure                      | Exemple                      |
+| - | --------------------------- | ---------------------------- |
+| 1 | Activer l'authentification  | `--auth`                     |
+| 2 | Limiter l'exposition réseau | `127.0.0.1:27017:27017`      |
+| 3 | Utiliser des rôles minimaux | Création d'utilisateurs RBAC |
 
-2	Effacement des preuves	deleteMany({}) supprime toutes les traces
+### Exemple d'utilisateur restreint
 
-3	Ransomware	Suppression des données + demande rançon
+```javascript
+db.createUser({
+  user: "analyst",
+  pwd: "StrongPassword123!",
+  roles: ["read"]
+})
+```
 
-6\. 3 mesures correctives immédiates
+---
 
-\#	Mesure	Commande
+## 📊 Comparaison SQL vs NoSQL
 
-1	Activer l'authentification	docker run --auth -e MONGO\_INITDB\_ROOT\_USERNAME=admin -e MONGO\_INITDB\_ROOT\_PASSWORD=...
+| SQL           | MongoDB (NoSQL)                  |
+| ------------- | -------------------------------- |
+| Tables        | Collections                      |
+| Lignes        | Documents                        |
+| Colonnes      | Champs JSON                      |
+| Schéma rigide | Schéma flexible                  |
+| Jointures     | Références / Documents imbriqués |
 
-2	Limiter le binding	-p 127.0.0.1:27017:27017
+---
 
-3	Créer utilisateur avec rôles	db.createUser({ user: "analyst", pwd: "...", roles: \["read"] })
+## ✅ Conclusion
 
-7\. Différences SQL vs NoSQL (à retenir)
+Ce TP a permis :
 
-SQL	NoSQL (MongoDB)
+* D'identifier les vulnérabilités d'une configuration MongoDB par défaut.
+* D'effectuer les opérations CRUD fondamentales.
+* D'explorer les requêtes avancées MongoDB.
+* De comprendre les principaux risques liés à une mauvaise configuration.
+* De proposer des mesures de sécurisation conformes aux bonnes pratiques DevSecOps.
 
-Tables	Collections
+---
 
-Lignes	Documents
+## 👨‍💻 Auteur
 
-Colonnes	Champs JSON
+**Hamza MRANI ALAOUI**
 
-Schéma rigide	Schéma flexible
-
-Jointures	Embed / Reference
-
-8\. Signature
-
-Étudiant : \[VOTRE NOM]
-
-Date de fin TP1 : 02/06/2026
-
+**Module :** NoSQL Security
+**TP :** MongoDB Security Basics (TP1)
+**Date :** 02 Juin 2026
