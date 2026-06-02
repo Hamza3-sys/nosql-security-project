@@ -1,170 +1,227 @@
-\# NoSQL Security Project
+# 🔐 NoSQL Security Project
 
+## 📖 Description
 
+Projet académique réalisé dans le cadre du module **NoSQL Security**.
 
-\## 📌 Description
+L'objectif est d'explorer les bases de données NoSQL, en particulier MongoDB, tout en appliquant les principes de sécurité, de hardening, de développement sécurisé et d'analyse statique de code.
 
-Projet réalisé dans le cadre du module \*\*NoSQL Security\*\*.
+Les travaux pratiques couvrent :
 
-L'objectif est de maîtriser les bases de données NoSQL (MongoDB) avec un focus sur la cybersécurité.
+* Fondamentaux MongoDB
+* Sécurité par défaut et risques
+* Hardening et RBAC
+* NoSQL Injection
+* Développement sécurisé
+* Analyse SAST avec SonarQube
 
+---
 
+## 🛠️ Technologies Utilisées
 
-\## 🛠 Technologies utilisées
+| Technologie  | Utilisation           |
+| ------------ | --------------------- |
+| MongoDB 7    | Base de données NoSQL |
+| Docker       | Conteneurisation      |
+| Node.js      | Développement Backend |
+| Express.js   | API REST              |
+| SonarQube    | Analyse SAST          |
+| SonarScanner | Analyse automatisée   |
+| Git & GitHub | Gestion de version    |
+| VS Code      | Développement         |
 
-\- \*\*MongoDB 7\*\* - Base de données NoSQL orientée documents
+---
 
-\- \*\*Docker\*\* - Conteneurisation de l'environnement
+## 📂 Structure du Projet
 
-\- \*\*Node.js + Express\*\* - API REST pour les démonstrations
-
-\- \*\*SonarQube\*\* - Analyse statique de code (SAST)
-
-\- \*\*mongosh\*\* - Shell interactif MongoDB
-
-
-
-\## 📁 Structure du projet
-
+```text
 nosql-security-project/
+│
+├── README.md
+├── .gitignore
+├── docker-compose.yml
+│
+├── docs/
+│   ├── architecture.md
+│   ├── glossary.md
+│   └── references.md
+│
+├── screenshots/
+│   ├── TP1/
+│   ├── TP2/
+│   ├── TP3/
+│   ├── TP4/
+│   └── TP5/
+│
+├── TP1-MongoDB-Basics/
+│   ├── README.md
+│   └── captures/
+│
+├── TP2-Data-Security/
+│   ├── README.md
+│   └── captures/
+│
+├── TP3-MongoDB-Hardening/
+│   ├── README.md
+│   └── captures/
+│
+├── TP4-NoSQL-Injection/
+│   ├── README.md
+│   └── captures/
+│
+├── TP5-SAST-SonarQube/
+│   ├── README.md
+│   └── captures/
+│
+├── soc-api/
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── server.js
+│   ├── server-safe.js
+│   └── .env.example
+│
+└── docker/
+    ├── mongodb/
+    └── sonarqube/
+```
 
-├── TP1/ # Découverte de NoSQL et MongoDB
+---
 
-├── TP2/ # Modélisation, Index, Aggregation
+## 🚀 Installation
 
-├── TP3/ # Hardening (Authentification, RBAC)
+### Prérequis
 
-├── TP4/ # NoSQL Injection et Requêtes sûres
+* Docker Desktop
+* Node.js 18+
+* Git
+* VS Code
 
-├── TP5/ # SAST avec SonarQube
+---
 
-├── docker/ # Fichiers Docker
-
-├── screenshots/ # Captures globales
-
-├── docs/ # Documentation
-
-├── soc-api/ # API Node.js (TP4 et TP5)
-
-├── docker-compose.yml # Orchestration Docker
-
-├── README.md # Ce fichier
-
-└── requirements.txt # Dépendances
-
-
-
-text
-
-
-
-\## 🚀 Installation et lancement
-
-
-
-\### Prérequis
-
-\- Docker Desktop installé
-
-\- Node.js 18+ installé
-
-\- VS Code (recommandé)
-
-
-
-\### Lancer MongoDB (version insecure)
+## 🐳 MongoDB Vulnérable
 
 ```bash
+docker run -d \
+--name mongo-noseclab \
+-p 27017:27017 \
+-v mongo-data:/data/db \
+mongo:7
+```
 
-docker run -d --name mongo-noseclab -p 27017:27017 -v mongo-data:/data/db mongo:7
+---
 
-Lancer MongoDB (version sécurisée)
+## 🛡️ MongoDB Sécurisé
 
-bash
+```bash
+docker run -d \
+--name mongo_secure \
+-p 127.0.0.1:27018:27017 \
+-e MONGO_INITDB_ROOT_USERNAME=adminSoc \
+-e MONGO_INITDB_ROOT_PASSWORD=Passw0rd_S3cure! \
+mongo:7 --auth
+```
 
-docker run -d --name mongo-secure -p 127.0.0.1:27018:27017 -e MONGO\_INITDB\_ROOT\_USERNAME=adminSoc -e MONGO\_INITDB\_ROOT\_PASSWORD=Passw0rd\_S3cure! mongo:7 --auth
+---
 
-Lancer SonarQube
+## 🔍 SonarQube
 
-bash
+```bash
+docker run -d \
+--name sonarqube \
+-p 9000:9000 \
+sonarqube:lts-community
+```
 
-docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
+Accès :
 
-Lancer l'API Node.js
+```text
+http://localhost:9000
+```
 
-bash
+---
 
+## ⚙️ API Node.js
+
+Installation :
+
+```bash
 cd soc-api
 
 npm install
+```
 
-node server.js          # API vulnérable (port 3000)
+API vulnérable :
 
-\# ou
+```bash
+node server.js
+```
 
-node server-safe.js     # API sécurisée (port 3001)
+API sécurisée :
 
-📚 TPs réalisés
+```bash
+node server-safe.js
+```
 
-TP	Sujet	Description
+---
 
-TP1	Découverte NoSQL	CRUD, modélisation document, sécurité par défaut
+## 📚 Travaux Pratiques Réalisés
 
-TP2	Modélisation \& Index	Embed/Reference, aggregation pipeline, explain()
+| TP  | Sujet                    | Statut |
+| --- | ------------------------ | ------ |
+| TP1 | MongoDB Basics & CRUD    | ✅      |
+| TP2 | Data Security & Indexing | ✅      |
+| TP3 | MongoDB Hardening & RBAC | ✅      |
+| TP4 | NoSQL Injection          | ✅      |
+| TP5 | SAST avec SonarQube      | ✅      |
 
-TP3	Hardening	Authentification, RBAC, moindre privilège
+---
 
-TP4	NoSQL Injection	Injections 
+## 🔒 Bonnes Pratiques de Sécurité
 
-n
+| Contrôle                      | Statut |
+| ----------------------------- | ------ |
+| Authentification MongoDB      | ✅      |
+| RBAC                          | ✅      |
+| Principe du moindre privilège | ✅      |
+| Validation des entrées        | ✅      |
+| Safe Filters MongoDB          | ✅      |
+| Projection minimale           | ✅      |
+| Variables d'environnement     | ✅      |
+| Désactivation X-Powered-By    | ✅      |
+| Analyse SAST                  | ✅      |
 
-e
+---
 
-,
+## 📊 Avancement
 
-ne,regex, safeFilter, projection
+| TP  | Statut    |
+| --- | --------- |
+| TP1 | ✅ Terminé |
+| TP2 | ✅ Terminé |
+| TP3 | ✅ Terminé |
+| TP4 | ✅ Terminé |
+| TP5 | ✅ Terminé |
 
-TP5	SAST	SonarQube, Security Hotspots, correction
+**Progression globale : 100%**
 
-🔒 Sécurité - Règles d'or
+---
 
-Règle	Description
+## 👨‍💻 Auteur
 
-✅	Activer l'authentification MongoDB (--auth)
+**Hamza MRANI ALAOUI**
 
-✅	Limiter le binding réseau (127.0.0.1)
+Étudiant Ingénieur en Cybersécurité
 
-✅	Utiliser des variables d'environnement (pas d'identifiants en clair)
+EIDIA / EuroMed University
 
-✅	Jamais find(req.body) - utiliser safeFilter
+---
 
-✅	Toujours projeter les champs nécessaires
+## 📅 Année Universitaire
 
-✅	Valider les types des entrées utilisateur
+**2025 - 2026**
 
-✅	Désactiver l'en-tête X-Powered-By
+---
 
-📊 Avancement
+## 📜 Licence
 
-TP	Statut	Captures
-
-TP1	✅ Terminé	3
-
-TP2	✅ Terminé	9
-
-TP3	✅ Terminé	8
-
-TP4	✅ Terminé	11
-
-TP5	✅ Terminé	8
-
-👤 Auteur
-
-Hamza MRANI ALAOUI - hamza.mranialaoui@eidia.ueuromed .org
-
-
-
-📅 Date
-
-Juin 2026
-
+Projet académique réalisé dans le cadre du module **NoSQL Security**.
