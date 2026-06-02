@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongo-noseclab
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - soc-network
+
+  mongodb-secure:
+    image: mongo:7
+    container_name: mongo-secure
+    ports:
+      - "127.0.0.1:27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=adminSoc
+      - MONGO_INITDB_ROOT_PASSWORD=Passw0rd_S3cure!
+    command: ["mongod", "--auth"]
+    volumes:
+      - mongo-secure-data:/data/db
+    networks:
+      - soc-network
+
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-extensions:/opt/sonarqube/extensions
+    networks:
+      - soc-network
+
+networks:
+  soc-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  mongo-secure-data:
+  sonarqube-data:
+  sonarqube-extensions:

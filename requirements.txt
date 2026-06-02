@@ -1,0 +1,22 @@
+# Dépendances du projet NoSQL Security
+
+# Base de données
+mongodb==7.0.0
+
+# Client shell (inclus avec MongoDB)
+mongosh>=2.0.0
+
+# Driver Python (optionnel)
+pymongo==4.6.0
+
+# API Node.js
+express==4.18.0
+mongodb==6.3.0
+dotenv==16.0.0
+helmet==7.0.0
+
+# Outils de sécurité (SonarQube)
+sonar-scanner==6.2.1
+
+# Utilitaires
+safe-regex==1.1.0

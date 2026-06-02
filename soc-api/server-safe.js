@@ -2,6 +2,7 @@
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const app = express();
+app.disable('x-powered-by'); 
 const PORT = 3001;  // port différent pour ne pas confondre
 
 const URI = 'mongodb://adminSoc:Passw0rd_S3cure!@localhost:27018/soc_lite?authSource=admin';
