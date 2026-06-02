@@ -1,130 +1,91 @@
-\# Checklist Hardening MongoDB — TP3
+# 🔐 Checklist Hardening MongoDB — TP3
 
+## 📌 Informations Générales
 
+| Élément | Valeur |
+|----------|----------|
+| **Étudiant** | Hamza MRANI ALAOUI |
+| **Module** | NoSQL Security |
+| **Séance** | TP3 - MongoDB Hardening |
+| **Date** | 02/06/2026 |
 
-\## Informations
+---
 
-\- \*\*Date\*\* : 02/06/2026
+## 🧱 1. Configuration du conteneur
 
-\- \*\*Module\*\* : NoSQL Security - Séance 3
-
-
-
-\---
-
-
-
-\## 1. Configuration du conteneur
-
-
+Vérification des paramètres de sécurité appliqués au déploiement MongoDB :
 
 | Vérification | Statut |
-
 |--------------|--------|
-
 | Authentification activée (`--auth`) | ✅ OUI |
+| Binding sur `127.0.0.1` uniquement | ✅ OUI |
+| Port non exposé publiquement (`0.0.0.0`) | ✅ OUI (27018) |
+| Variables d’environnement admin initial | ✅ OUI |
 
-| Binding sur 127.0.0.1 uniquement | ✅ OUI |
+---
 
-| Port non exposé sur 0.0.0.0 | ✅ OUI (27018) |
+## 👤 2. Comptes utilisateurs créés
 
-| Variables d'environnement pour admin initial | ✅ OUI |
+| Compte | Rôle | Base | Objectif |
+|--------|------|------|----------|
+| `adminSoc` | root | admin | Administration système |
+| `soc_app` | readWrite | soc_lite | Application |
+| `soc_analyst_ro` | read | soc_lite | Analyse des logs |
+| `soc_manager` | incidentManager | soc_lite | Gestion des incidents |
 
+---
 
+## 🛡️ 3. Rôle personnalisé
 
-\---
+Un rôle dédié a été créé pour limiter les privilèges sur la collection des incidents :
 
+| Nom du rôle | Base | Permissions |
+|-------------|------|-------------|
+| `incidentManager` | `soc_lite` | find, insert, update, remove sur `incidents` |
 
+---
 
-\## 2. Comptes créés
+## 🧪 4. Tests d’accès (Validation RBAC)
 
+| Compte | Action | Résultat | Statut |
+|--------|--------|----------|--------|
+| Anonyme | `listDatabases` | Erreur d’authentification | ❌ Bloqué |
+| `soc_analyst_ro` | Lecture logs | Succès | ✅ |
+| `soc_analyst_ro` | Écriture logs | Refusé | ✅ |
+| `soc_manager` | Lecture incidents | Succès | ✅ |
+| `soc_manager` | Mise à jour incidents | Succès | ✅ |
+| `soc_manager` | Lecture logs | Refusé | ✅ |
+| `soc_app` | Écriture logs | Succès | ✅ |
 
+---
 
-| Compte | Rôle | Base d'auth | Objectif |
+## ⚠️ 5. Points d’amélioration identifiés
 
-|--------|------|-------------|----------|
+| Problème | Solution recommandée |
+|----------|----------------------|
+| `readWrite` trop permissif | Créer un rôle custom limité à certaines collections |
+| `read` trop large (accès users) | Restreindre aux collections `logs` et `incidents` |
+| Absence de segmentation fine | Implémenter RBAC plus granulaire |
 
-| adminSoc | root | admin | Administration |
+---
 
-| soc\_app | readWrite | soc\_lite | Application |
+## 📊 Conclusion
 
-| soc\_analyst\_ro | read | soc\_lite | Lecture logs |
+Ce TP a permis de :
 
-| soc\_manager | incidentManager | soc\_lite | Gestion incidents |
+- Activer et valider l’authentification MongoDB
+- Mettre en place une architecture RBAC (Role-Based Access Control)
+- Créer des rôles personnalisés adaptés au SOC
+- Tester les restrictions d’accès
+- Identifier les améliorations de sécurité possibles
 
+L’approche adoptée renforce fortement la sécurité des données et limite les privilèges selon le principe du moindre privilège.
 
+---
 
-\---
+## 👨‍💻 Auteur
 
-
-
-\## 3. Rôle personnalisé créé
-
-
-
-| Nom | Base | Privileges |
-
-|-----|------|------------|
-
-| incidentManager | soc\_lite | incidents: find, insert, update, remove |
-
-
-
-\---
-
-
-
-\## 4. Tests d'accès
-
-
-
-| Compte | Opération | Résultat | Statut |
-
-|--------|-----------|----------|--------|
-
-| Anonyme | listDatabases | Erreur auth | ✅ |
-
-| soc\_analyst\_ro | Lecture logs | Succès | ✅ |
-
-| soc\_analyst\_ro | Écriture logs | Refusé | ✅ |
-
-| soc\_manager | Lecture incidents | Succès | ✅ |
-
-| soc\_manager | Mise à jour incidents | Succès | ✅ |
-
-| soc\_manager | Lecture logs | Refusé | ✅ |
-
-| soc\_app | Écriture logs | Succès | ✅ |
-
-
-
-\---
-
-
-
-\## 5. Points d'amélioration identifiés
-
-
-
-| Problème | Solution |
-
-|----------|----------|
-
-| readWrite donne accès à toutes les collections | Créer un rôle personnalisé pour soc\_app |
-
-| read donne accès à users | Créer un rôle personnalisé limité à logs + incidents |
-
-
-
-\---
-
-
-
-\## 6. Signature
-
-
-
-\*\*Étudiant\*\* : \[VOTRE NOM]
-
-\*\*Date\*\* : 02/06/2026
-
+**Hamza MRANI ALAOUI**  
+**Module :** NoSQL Security  
+**TP :** MongoDB Hardening (TP3)  
+**Date :** 02 Juin 2026
